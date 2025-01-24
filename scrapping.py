@@ -8,8 +8,14 @@ import sys
 import io
 import os
 import requests
+import pandas as pd
+import logging
+from datetime import datetime
 
 ### Uber eats Food Choice Project ###
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # to be able to print in utf-8
@@ -105,7 +111,7 @@ return Array.from(document.querySelectorAll('[data-test="store-link"]')).map(sto
     
     return {
         name: titleElement?.textContent || '',
-        rating: ratingElement?.textContent || 'No rating',
+        rating: ratingElement?.textContent || 0.0,
         types: types,
         address: address,
         imageUrl: imageUrl
@@ -146,12 +152,23 @@ while True:
         break
 
 
-
+# read restaurant_database.csv to see if the restaurant is already in the database
+try:
+    db_df = pd.read_csv('restaurant_database.csv')
+    logger.info("Loaded restaurant_database.csv")
+except FileNotFoundError:
+    logger.error("restaurant_database.csv not found")
+    #interrupt the program
+    sys.exit()
 
 
 # Create a directory to store images if it doesn't exist
 if not os.path.exists('restaurant_images'):
     os.makedirs('restaurant_images')
+
+# keep track of the number of updates and new records
+update_count = 0
+new_records_count = 0
 
 restaurants_data = driver.execute_script(script)
 for idx, restaurant in enumerate(restaurants_data):
@@ -159,11 +176,64 @@ for idx, restaurant in enumerate(restaurants_data):
     print("Rating:", restaurant['rating'])
     print("Types:", ' | '.join(restaurant['types']))
     print("Address:", restaurant['address'])
-    
-    # # read restaurant_database.csv to see if the restaurant is already in the database
-    # with open('restaurant_database.csv', 'r') as f:
+
+    found_restaurant_flag = False
+    update_index = 99999
+    for index, row in db_df.iterrows():
+        # print(f'index: {index}')
+        # print(row)
+        mask = (row['restaurant_name'] == restaurant['name']) & (row['restaurant_address'] == restaurant['address'])
+        # print()
+        # print(f'mask: {mask}')
+        if mask == True:
+            found_restaurant_flag = True
+            update_count += 1
+            update_index = index
+
+            db_df.at[index, 'restaurant_name'] = restaurant['name']
+            db_df.at[index, 'restaurant_rating'] = restaurant['rating']
+            db_df.at[index, 'is_open'] = 1 # 1 means open if we can scrape the website information
+            db_df.at[index, 'last_time_scraped'] = datetime.now()
+            db_df.at[index, 'restaurant_address'] = restaurant['address']
+
+            type_columns = [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img']]
+            for type in restaurant['types']:
+                for feature in type_columns:
+                    if type == feature:
+                        db_df.at[index, feature] = 1
+                        # if not in the type the rest should be 0
+                    else:
+                        db_df.at[index, feature] = 0
+            logger.info(f"Updated restaurant: {restaurant['name']}")
+            break
+
+    if found_restaurant_flag == False:
+        logger.info(f"Restaurant not found in the database: {restaurant['name']}")
+        
+        new_records_count += 1
+
+        new_record = {
+            'restaurant_name': restaurant['name'], 
+            'restaurant_rating': restaurant['rating'],
+            'last_time_scraped': datetime.now(),
+            'is_open': 1,
+            'restaurant_address': restaurant['address'],
+            'restaurant_img': ''
+        }
+
+        for type_col in [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img']]:
+            new_record[type_col] = 0
+
+        for restaurant_type in restaurant['types']:
+            new_record[restaurant_type] = 1
+
+        # add the new record to the database
+        db_df.loc[len(db_df)] = new_record
+
+        logger.info(f'added new record: {restaurant["name"]} to the database')
 
     # store restaurant types in csv
+    # this is to make sure no unique types are missed
     with open('unique_types.csv', 'a') as f:
         for type in restaurant['types']:
             f.write(f"{type}\n")
@@ -182,6 +252,10 @@ for idx, restaurant in enumerate(restaurants_data):
                 with open(image_filename, 'wb') as f:
                     f.write(response.content)
                 print(f"Image saved as: {image_filename}")
+                if found_restaurant_flag == True:
+                    db_df.at[update_index, 'restaurant_img'] = image_filename
+                else:
+                    db_df.at[len(db_df)-1, 'restaurant_img'] = image_filename
             else:
                 print(f"Failed to download image. Status code: {response.status_code}")
         except Exception as e:
@@ -207,6 +281,10 @@ with open('unique_types.csv', 'w', encoding='utf-8', newline='') as f:
         f.write(f"{type}\n")
     f.close()
 
+# save the updated database
+db_df.to_csv('restaurant_database.csv', index=False)
+
+logger.info(f"Updated {update_count} records and added {new_records_count} new records")
 
 
 
