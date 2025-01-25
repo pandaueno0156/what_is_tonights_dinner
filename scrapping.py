@@ -17,12 +17,10 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# to be able to print in utf-8
+# To be able to print in utf-8
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 print("Hello World")
-
 
 # Set up Chrome options for proper encoding
 chrome_options = Options()
@@ -45,7 +43,6 @@ driver = webdriver.Chrome(options=chrome_options)  # Make sure you have ChromeDr
 # Wait for the content to load
 wait = WebDriverWait(driver, 10)
 driver.get(url)
-time.sleep(5)  # Wait 5 seconds after page load before searching for elements
 
 
 script = """
@@ -121,8 +118,7 @@ return Array.from(document.querySelectorAll('[data-test="store-link"]')).map(sto
 
 
 # Wait for store-link elements to be present
-wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-test="store-link"]')))
-time.sleep(3)  # Give extra time for dynamic content to load
+wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[data-test="store-link"]')))
 
 # Scroll to bottom of page gradually until no new content loads
 last_height = driver.execute_script("return document.body.scrollHeight")
@@ -142,8 +138,7 @@ while True:
 
     driver.execute_script(f"window.scrollTo({initial_height}, {new_height});")
 
-    time.sleep(2)
-
+    time.sleep(0.5)
     # update the initial height
     initial_height = new_height
 
@@ -172,10 +167,11 @@ new_records_count = 0
 
 restaurants_data = driver.execute_script(script)
 for idx, restaurant in enumerate(restaurants_data):
-    print(f"\nRestaurant: {restaurant['name']}")
-    print("Rating:", restaurant['rating'])
-    print("Types:", ' | '.join(restaurant['types']))
-    print("Address:", restaurant['address'])
+    # Check if the information is scraped correctly
+    # print(f"\nRestaurant: {restaurant['name']}")
+    # print("Rating:", restaurant['rating'])
+    # print("Types:", ' | '.join(restaurant['types']))
+    # print("Address:", restaurant['address'])
 
     found_restaurant_flag = False
     update_index = 99999
@@ -191,7 +187,7 @@ for idx, restaurant in enumerate(restaurants_data):
             update_index = index
 
             db_df.at[index, 'restaurant_name'] = restaurant['name']
-            db_df.at[index, 'restaurant_rating'] = restaurant['rating']
+            db_df.at[index, 'restaurant_rating'] = float(restaurant['rating'])
             db_df.at[index, 'is_open'] = 1 # 1 means open if we can scrape the website information
             db_df.at[index, 'last_time_scraped'] = datetime.now()
             db_df.at[index, 'restaurant_address'] = restaurant['address']
@@ -201,14 +197,15 @@ for idx, restaurant in enumerate(restaurants_data):
                 for feature in type_columns:
                     if type == feature:
                         db_df.at[index, feature] = 1
-                        # if not in the type the rest should be 0
                     else:
+                        # if not in the type the rest should be 0
                         db_df.at[index, feature] = 0
-            logger.info(f"Updated restaurant: {restaurant['name']}")
+
+            # logger.info(f"Updated restaurant: {restaurant['name']}")
             break
 
     if found_restaurant_flag == False:
-        logger.info(f"Restaurant not found in the database: {restaurant['name']}")
+        # logger.info(f"Restaurant not found in the database: {restaurant['name']}")
         
         new_records_count += 1
 
@@ -230,10 +227,9 @@ for idx, restaurant in enumerate(restaurants_data):
         # add the new record to the database
         db_df.loc[len(db_df)] = new_record
 
-        logger.info(f'added new record: {restaurant["name"]} to the database')
+        # logger.info(f'added new record: {restaurant["name"]} to the database')
 
-    # store restaurant types in csv
-    # this is to make sure no unique types are missed
+    # store restaurant types in csv. This is to make sure no unique types are missed
     with open('unique_types.csv', 'a') as f:
         for type in restaurant['types']:
             f.write(f"{type}\n")
@@ -251,7 +247,10 @@ for idx, restaurant in enumerate(restaurants_data):
             if response.status_code == 200:
                 with open(image_filename, 'wb') as f:
                     f.write(response.content)
-                print(f"Image saved as: {image_filename}")
+                # Check if the image is saved
+                # print(f"Image saved as: {image_filename}")
+                # print("-" * 50)
+
                 if found_restaurant_flag == True:
                     db_df.at[update_index, 'restaurant_img'] = image_filename
                 else:
@@ -261,12 +260,14 @@ for idx, restaurant in enumerate(restaurants_data):
         except Exception as e:
             print(f"Error downloading image: {e}")
     else:
+        # based on observation, the image url is always present.
+        # if it is not present, scraping is not working.
         print("No image URL found")
-    
-    print("-" * 50)
+        # print("-" * 50)
+
 
 # read unique_types.csv and make a unique list of types
-# currently have 433 types
+# currently have 439 types
 # unique_types_used_feature.csv is sotred and used to create the original restaurant_database.csv
 # unique_types.csv will be used to keep collecting types and make sure no unique types are missed
 with open('unique_types.csv', 'r') as f:
