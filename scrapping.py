@@ -186,14 +186,17 @@ def scrape_restaurant_data():
                 found_restaurant_flag = True
                 update_count += 1
                 update_index = index
+                
+                # To update the rating, open_status, last_time_scrappd, restaurant_types
 
-                db_df.at[index, 'restaurant_name'] = restaurant['name']
+                # db_df.at[index, 'restaurant_name'] = restaurant['name']
+                # db_df.at[index, 'restaurant_address'] = restaurant['address']
                 db_df.at[index, 'restaurant_rating'] = float(restaurant['rating'])
                 db_df.at[index, 'is_open'] = 1 # 1 means open if we can scrape the website information
                 db_df.at[index, 'last_time_scraped'] = datetime.now()
-                db_df.at[index, 'restaurant_address'] = restaurant['address']
+                db_df.at[index, 'restaurant_types'] = restaurant['types']
 
-                type_columns = [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img']]
+                type_columns = [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img', 'restaurant_types']]
                 for type in restaurant['types']:
                     for feature in type_columns:
                         if type == feature:
@@ -210,23 +213,27 @@ def scrape_restaurant_data():
             
             new_records_count += 1
 
+            # To create a new record as we cannot find the restaurant in the database
             new_record = {
                 'restaurant_name': restaurant['name'], 
                 'restaurant_rating': restaurant['rating'],
                 'last_time_scraped': datetime.now(),
                 'is_open': 1,
                 'restaurant_address': restaurant['address'],
-                'restaurant_img': ''
+                'restaurant_img': '',
+                'restaurant_types': restaurant['types']
             }
 
-            for type_col in [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img']]:
+            for type_col in [col for col in db_df.columns if col not in ['restaurant_name', 'restaurant_rating', 'is_open', 'last_time_scraped', 'restaurant_address', 'restaurant_img', 'restaurant_types']]:
                 new_record[type_col] = 0
 
             for restaurant_type in restaurant['types']:
                 new_record[restaurant_type] = 1
 
             # add the new record to the database
-            db_df.loc[len(db_df)] = new_record
+            # Convert new_record to Series with matching index
+            new_record_series = pd.Series(new_record, index=db_df.columns)
+            db_df.loc[len(db_df)] = new_record_series
 
             # logger.info(f'added new record: {restaurant["name"]} to the database')
 
