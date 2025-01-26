@@ -14,6 +14,7 @@ from datetime import datetime
 
 ### Uber eats Food Choice Project ###
 
+
 def scrape_restaurant_data():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
