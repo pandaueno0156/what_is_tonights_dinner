@@ -12,7 +12,7 @@ import pandas as pd
 import logging
 from datetime import datetime
 
-### Uber eats Food Choice Project ###
+### What is tonight's dinner Project ###
 
 
 def scrape_restaurant_data():
