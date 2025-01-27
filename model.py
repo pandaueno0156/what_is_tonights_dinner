@@ -11,31 +11,30 @@ from tkinter import N, S, E, W, Tk, StringVar
 from PIL import Image, ImageTk
 import os
 import customtkinter as ctk
+import json
 
 def main():
 
     ### ===== Prepare the restaurant data from the database ===== ###
 
     try:
-        # this function will scrape the restaurant data and save it to the database
-        # This will ensure that the database is updated with the latest restaurant data
+        # This function will scrape the restaurant data and save it to the database for most recent data
         scrape_restaurant_data()
     except Exception as e:
         print(f"Error: {e}")
 
     # read the most recent database
     df = pd.read_csv('restaurant_database.csv')
-    # print(df)
 
     def transform_to_restaurants(df):
         new_df = df.copy()
 
-        # filter out the rows where is_open is 0
+        # Filter out the rows where is_open is 0
         # To ensure that we only consider the restaurants that are currently open
         new_df = new_df[new_df['is_open'] == 1]
         new_df.drop(columns=['last_time_scraped','is_open', 'restaurant_address'], inplace=True)
         
-        # normalize the ratings in new_df
+        # Normalize the ratings in new_df
         new_df['normalized_restaurant_rating'] = (new_df['restaurant_rating'] - 0.0) / (5.0 - 0.0)
 
         features_columns = [f for f in new_df.columns if f not in ['restaurant_name', 'restaurant_rating', 'restaurant_img', 'restaurant_types']]
@@ -70,41 +69,41 @@ def main():
             self.root = root
             self.root.title("What is tonight's dinner?")
 
-            # window size
+            # Window size
             self.root.geometry("900x680")
 
-            # window background color
-            # ctk.set_appearance_mode("dark")
-            # ctk.set_default_color_theme("dark-blue")
-            self.root.configure(bg="white")
+            # Window background color
+            ctk.set_appearance_mode("dark")
+            ctk.set_default_color_theme("dark-blue")
+            # self.root.configure(bg="white")
 
-            # create mainframe
-            self.mainframe = ttk.Frame(self.root, padding="20")
-            self.mainframe.grid(column=0, row=0, sticky="nsew")
+            # Create mainframe
+            self.mainframe = ctk.CTkFrame(self.root)
+            self.mainframe.grid(column=0, row=0, sticky="nsew", padx=20)
 
-            # congigure the grid's column and row weights
+            # Configure the grid's column and row weights
             self.root.columnconfigure(0, weight=1)
             self.root.rowconfigure(0, weight=1)
 
-            # create labels for the restaurant options
-            ttk.Label(self.mainframe, text="Option: Restaurant A", font=("Helvetica", 15, 'bold')).grid(row=1, column=0, padx=5, pady=5)
-            ttk.Label(self.mainframe, text="Option: Restaurant B", font=("Helvetica", 15, 'bold')).grid(row=1, column=2, padx=5, pady=5)
+            # Create labels for the restaurant options
+            ctk.CTkLabel(self.mainframe, text="Option: Restaurant A", font=("Helvetica", 17, 'bold')).grid(row=1, column=0, padx=5, pady=5)
+            ctk.CTkLabel(self.mainframe, text="Option: Restaurant B", font=("Helvetica", 17, 'bold')).grid(row=1, column=2, padx=5, pady=5)
 
-            # create frames for each restaurant inside the mainframe
-            self.rest_a_frame = ttk.Frame(self.mainframe, padding="5")
-            self.rest_a_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+            # Create frames for each restaurant inside the mainframe
+            self.rest_a_frame = ctk.CTkFrame(self.mainframe)
+            self.rest_a_frame.grid(row=2, column=0, padx=(20, 10), pady=10, sticky="nsew")
 
-            self.rest_b_frame = ttk.Frame(self.mainframe, padding="5")
-            self.rest_b_frame.grid(row=2, column=2, padx=10, pady=10, sticky="nsew")
+            self.rest_b_frame = ctk.CTkFrame(self.mainframe)
+            self.rest_b_frame.grid(row=2, column=2, padx=(10, 20), pady=10, sticky="nsew")
 
-            # create round number label
-            self.round_number_label = ttk.Label(self.mainframe, font=("Helvetica", 18, 'bold'))
-            self.round_number_label.grid(row=0, column=0, columnspan=3, sticky="n")
+            # Create round number label
+            self.round_number_label = ctk.CTkLabel(self.mainframe, font=("Helvetica", 20, 'bold'))
+            self.round_number_label.grid(row=0, column=0, pady=(20, 10),columnspan=3, sticky="n")  # pady = (top, bottom)
 
-            # choice variable - to store the user's choice from clicking the buttons
-            self.user_choice_var = StringVar()
+            # Choice variable - to store the user's choice from clicking the buttons
+            self.user_choice_var = ctk.StringVar()
 
-            # create UI elements for the restaurant display
+            # Create UI elements for the restaurant display
             self.create_restaurant_display()
 
         def create_restaurant_display(self):
@@ -113,19 +112,19 @@ def main():
             # ttk.Label(self.rest_a_frame, text="Option A").grid(row=0, column=0, padx=5, pady=5)
             
             # Image placeholder
-            self.rest_a_image_placeholder_label = ttk.Label(self.rest_a_frame)
+            self.rest_a_image_placeholder_label = ctk.CTkLabel(self.rest_a_frame, text="") # empty text to hold the image
             self.rest_a_image_placeholder_label.grid(row=2, column=0, pady=10)
 
             # Restaurant name display
-            self.rest_a_name_label = ttk.Label(self.rest_a_frame, text="Restaurant Name", font=("Helvetica", 12), wraplength=400)
+            self.rest_a_name_label = ctk.CTkLabel(self.rest_a_frame, text="Restaurant Name", font=("Helvetica", 13), wraplength=400)
             self.rest_a_name_label.grid(row=3, column=0, pady=5)
 
             # Restaurant rating display
-            self.rest_a_rating_label = ttk.Label(self.rest_a_frame, text="Rating: ", font=("Helvetica", 12))
+            self.rest_a_rating_label = ctk.CTkLabel(self.rest_a_frame, text="Rating: ", font=("Helvetica", 13))
             self.rest_a_rating_label.grid(row=4, column=0, pady=5)
 
             # Restaurant types display
-            self.rest_a_types_label = ttk.Label(self.rest_a_frame, text="Types: ", font=("Helvetica", 12))
+            self.rest_a_types_label = ctk.CTkLabel(self.rest_a_frame, text="Types: ", font=("Helvetica", 13))
             self.rest_a_types_label.grid(row=5, column=0, pady=5)
 
             # Restaurant B UI
@@ -133,24 +132,30 @@ def main():
             # ttk.Label(self.rest_b_frame, text="Option B").grid(row=0, column=2, padx=5, pady=5)
 
             # Image placeholder
-            self.rest_b_image_placeholder_label = ttk.Label(self.rest_b_frame)
+            self.rest_b_image_placeholder_label = ctk.CTkLabel(self.rest_b_frame, text="")
             self.rest_b_image_placeholder_label.grid(row=2, column=2, pady=10)
 
             # Restaurant name display
-            self.rest_b_name_label = ttk.Label(self.rest_b_frame, text="Restaurant Name", font=("Helvetica", 12), wraplength=400)
+            self.rest_b_name_label = ctk.CTkLabel(self.rest_b_frame, text="Restaurant Name", font=("Helvetica", 13), wraplength=400)
             self.rest_b_name_label.grid(row=3, column=2, pady=5)
 
             # Restaurant rating display
-            self.rest_b_rating_label = ttk.Label(self.rest_b_frame, text="Rating: ", font=("Helvetica", 12))
+            self.rest_b_rating_label = ctk.CTkLabel(self.rest_b_frame, text="Rating: ", font=("Helvetica", 13))
             self.rest_b_rating_label.grid(row=4, column=2, pady=5)
 
             # Restaurant types display
-            self.rest_b_types_label = ttk.Label(self.rest_b_frame, text="Types: ", font=("Helvetica", 12))
+            self.rest_b_types_label = ctk.CTkLabel(self.rest_b_frame, text="Types: ", font=("Helvetica", 13))
             self.rest_b_types_label.grid(row=5, column=2, pady=5)
 
             # User choice buttons display
-            ttk.Button(self.mainframe, text="Choose A", command=lambda: self.make_choice("A")).grid(row=3, column=0, pady=20)
-            ttk.Button(self.mainframe, text="Choose B", command=lambda: self.make_choice("B")).grid(row=3, column=2, pady=20)
+            ctk.CTkButton(self.mainframe, text="Choose A", command=lambda: self.make_choice("A"), 
+                          corner_radius=32, fg_color="transparent", 
+                          hover_color="#4158D0", border_color="#FFCC70",
+                          border_width=2).grid(row=3, column=0, pady=20)
+            ctk.CTkButton(self.mainframe, text="Choose B", command=lambda: self.make_choice("B"), 
+                          corner_radius=32, fg_color="transparent", 
+                          hover_color="#4158D0", border_color="#FFCC70",
+                          border_width=2).grid(row=3, column=2, pady=20)
 
         def make_choice(self, choice):
             self.user_choice_var.set(choice)
@@ -166,17 +171,17 @@ def main():
 
             # Update round number label
             showing_round_num = round_num + 1
-            self.round_number_label.config(text=f'Round: {showing_round_num} / 10')  
+            self.round_number_label.configure(text=f'Round: {showing_round_num} / 10')  
 
             # Update Restaurant A info
-            self.rest_a_name_label.config(text=f'Name: {rest_a["name"]}')
-            self.rest_a_rating_label.config(text=f'Rating: {rest_a["rating"]}')
-            self.rest_a_types_label.config(text=f'Types: {rest_a["types"]}')
+            self.rest_a_name_label.configure(text=f'Name: {rest_a["name"]}')
+            self.rest_a_rating_label.configure(text=f'Rating: {rest_a["rating"]}')
+            self.rest_a_types_label.configure(text=f'Types: {rest_a["types"]}')
 
             # Update Restaurant B info
-            self.rest_b_name_label.config(text=f'Name: {rest_b["name"]}')
-            self.rest_b_rating_label.config(text=f'Rating: {rest_b["rating"]}')
-            self.rest_b_types_label.config(text=f'Types: {rest_b["types"]}')
+            self.rest_b_name_label.configure(text=f'Name: {rest_b["name"]}')
+            self.rest_b_rating_label.configure(text=f'Rating: {rest_b["rating"]}')
+            self.rest_b_types_label.configure(text=f'Types: {rest_b["types"]}')
 
             # Update images
             self.update_image(rest_a['image_path'], self.rest_a_image_placeholder_label)
@@ -187,10 +192,11 @@ def main():
                 image = Image.open(image_path)
                 # Resize the image to 400x300 using LANCZOS resampling
                 image = image.resize((400, 300), Image.Resampling.LANCZOS)
-                # Convert the image to a PhotoImage object
-                photo = ImageTk.PhotoImage(image)
-                image_label.config(image=photo)
-                image_label.image = photo  # Keep a reference to prevent garbage collection!
+
+                # Convert the image to a CTkImage object
+                photo = ctk.CTkImage(light_image=image, dark_image=image, size=(400, 300))
+                image_label.configure(image=photo)
+                image_label.image = photo  # Keep a reference to prevent garbage collection.
 
     ### ===== GUI for the user to select the restaurant options ===== ###
 
@@ -218,10 +224,12 @@ def main():
             time_difference = (current_time - past_time)
 
             if self.time_unit == "days":
-                # we calculate days based on fraction of days to be more time-sensitive
+                # Calculate days based on fraction of days to be more time-sensitive
                 return (time_difference).total_seconds() / (24 * 60 * 60)
+            
             elif self.time_unit == "hours":
                 return (time_difference).total_seconds() / 3600
+            
             else:
                 raise ValueError(f"Invalid time unit: {self.time_unit}")
 
@@ -238,12 +246,12 @@ def main():
                 value_time_difference = self.get_time_difference_calculation(current_time, past_time)
                 time_weight = self.decay_rate ** (value_time_difference)
 
-                # get model prediction for the past comparison
+                # Get model prediction for the past comparison
                 score_a = model(past_comparison["rest_a"]["features"])
                 score_b = model(past_comparison["rest_b"]["features"])
                 past_prob_a = torch.sigmoid(score_a - score_b)
 
-                # convert preference to a tensor
+                # Convert preference to a tensor
                 past_preference = past_comparison["preference"].clone().detach()
 
                 loss = criterion(past_prob_a, past_preference)
@@ -269,6 +277,16 @@ def main():
             # ) / (0.729 + 0.9 + 1.0)                # Normalize by sum of weights
 
             return final_loss
+
+    def save_history(history, filename):
+        # Save the history when the user quits the program
+        with open(filename, 'w') as f:
+            json.dump(history, f)
+    
+    def load_history(filename):
+        # Load the history when the user starts the program
+        with open(filename, 'r') as f:
+            return json.load(f)
 
     ### ===== TimeAwarePreference class to add the TAP function to the RankNet model ===== ###
 
@@ -305,10 +323,10 @@ def main():
         remaining_restaurants = restaurants.copy()
 
         # Initialize the GUI
-        root = tk.Tk()
+        root = ctk.CTk()
         app = RestaurantComparisonGUI(root)
         
-        # keep track of the current winner and contender with names
+        # Keep track of the current winner and contender with names
         current_winner = None
         current_contender = None
         
@@ -330,7 +348,7 @@ def main():
                     # print(f'rest_a: {rest_a}')
                     # print(f'rest_b: {rest_b}')
 
-                    # remove the selected restaurants from the remaining_restaurants list
+                    # Remove the selected restaurants from the remaining_restaurants list
                     remaining_restaurants.remove(rest_a)
                     remaining_restaurants.remove(rest_b)
                 else:
@@ -345,7 +363,7 @@ def main():
                     # To make sure that the restaurants exist for competing
                     assert rest_a is not None and rest_b is not None, "Restaurants must exist"
 
-                    # remove the current_contender from the remaining_restaurants list
+                    # Remove the current_contender from the remaining_restaurants list
                     remaining_restaurants.remove(rest_b)
 
                 # Update the GUI with the current restaurants
@@ -370,19 +388,7 @@ def main():
                 print(f"Option B: Restaurant: {rest_b['name']}")
                 print()
 
-                # # interaction with the user in terminal (going to be replaced with GUI)
-                # correct_answer_flag = False
-                # while not correct_answer_flag:
-                #     user_choice = input("Enter your choice of restaurant (A or B): ").strip().upper()
-                    
-                #     if user_choice == "A" or user_choice == "B":
-                #         print(f"User chose: {user_choice}")
-                #         correct_answer_flag = True
-                #     else:
-                #         print("Invalid input. Please enter A or B.")
-                #         print()
-
-                # interaction with the user in GUI
+                # Interaction with the user in GUI
                 user_choice = app.user_choice_var.get()
 
                 # This round's winner is the one that the user chose
@@ -395,16 +401,17 @@ def main():
                 ground_truth_label = torch.tensor(1.0 if user_choice == "A" else 0.0).unsqueeze(0)  # Reshaped to match prob_a_tensor
                 # print(f"Ground truth label: {ground_truth_label}")
                 # print(f'prob_a: {prob_a}')
-                # current_comparison
+                
+                # Current comparison
                 current_comparison = {
                     "rest_a": rest_a,
                     "rest_b": rest_b,
-                    'prob': prob_a, # model prediction of the preference that the user will choose A over B
+                    'prob': prob_a, # Model prediction of the preference that the user will choose A over B
                     "preference": ground_truth_label,
                     "timestamp": datetime.now()
                 }
 
-                # add the current comparison to the time_aware_preference_trainer
+                # Add the current comparison to the time_aware_preference_trainer
                 time_aware_preference_trainer.add_comparison(
                     rest_a=current_comparison["rest_a"],
                     rest_b=current_comparison["rest_b"],
@@ -427,14 +434,14 @@ def main():
                 print(f"Training Loss: {loss.item():.4f}")
 
                 if round_num == (rounds - 1):
-                    # To close the GUI after 10 rounds of games are played
+                    # To close the GUI after 10 rounds of decisions are made
                     root.quit()
                     root.destroy()
 
             # Final restaurant recommendation
             print(f"\nFinal Recommendation: {current_winner}")
 
-        # wait 100ms for GUI to initialize
+        # Wait 100ms for GUI to initialize
         root.after(100, run_training_model)
         root.mainloop()
 
@@ -443,12 +450,14 @@ def main():
 
     ### ===== Initialize the RankNet model and training process===== ###
 
-    # modify the restaurant_database.csv to make is_open = 0 
-    # for all restaurants after the training is complete
+    ### ===== Update the restaurant_database.csv to make is_open = 0 ===== ###
 
+    # Modify the restaurant_database.csv to make is_open = 0 
+    # for all restaurants after the training is complete
     df['is_open'] = 0
-    # print(df['is_open'].value_counts())  # Should show count of 0s
     df.to_csv('restaurant_database.csv', index=False)
+    
+    ### ===== Update the restaurant_database.csv to make is_open = 0 ===== ###
 
 if __name__ == "__main__":
     main()
