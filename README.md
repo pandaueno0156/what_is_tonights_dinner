@@ -15,3 +15,4 @@ Thirdly, the program will provide 2 recommendations each round based on the user
 The model uses Ranknet to predict user's preference in restaurants by providing the two highest probabilities of the restaurants that the user may want to eat. Then, the Ranknet model will take the feedback from the user to adjust the model's weight.
 
 Also, as the user's preference in food categories may change over time, the model has implemented the time awareness function, adding the history of last 30 choices into the calculation of model's loss. This will ensure that model is focusing more on learning the user's recent preference than the old preference in food options. 
+
