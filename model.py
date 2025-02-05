@@ -300,7 +300,7 @@ class RankNet(nn.Module):
     def __init__(self, input_size):
         super(RankNet, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(input_size, 16),  # Hidden layer
+            nn.Linear(input_size, 16),  # Hidden layer (Original paper 50 input, 10 hidden - 1 output, 2 layers)
             nn.ReLU(),
             nn.Linear(16, 1)  # Single score output
         )
@@ -437,7 +437,6 @@ def train_ranknet(model, optimizer, criterion, rounds=10):
         # Save the history when the user quits the program
         time_aware_preference_trainer.save_history('user_preference_history.pt')
             
-
         # Final restaurant recommendation
         print(f"\nFinal Recommendation: {current_winner}")
 
