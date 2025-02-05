@@ -112,7 +112,6 @@ class RestaurantComparisonGUI:
     def create_restaurant_display(self):
         # Restaurant A UI
         # Title
-        # ttk.Label(self.rest_a_frame, text="Option A").grid(row=0, column=0, padx=5, pady=5)
         
         # Image placeholder
         self.rest_a_image_placeholder_label = ctk.CTkLabel(self.rest_a_frame, text="") # empty text to hold the image
@@ -132,7 +131,6 @@ class RestaurantComparisonGUI:
 
         # Restaurant B UI
         # Title
-        # ttk.Label(self.rest_b_frame, text="Option B").grid(row=0, column=2, padx=5, pady=5)
 
         # Image placeholder
         self.rest_b_image_placeholder_label = ctk.CTkLabel(self.rest_b_frame, text="")
@@ -312,18 +310,6 @@ class RankNet(nn.Module):
 
 ### ===== Define the RankNet model ===== ###
 
-### ===== Initialize the RankNet model and training process===== ###
-
-# Initialize the RankNet model
-# input_size = len(restaurants[0]["features"])  # Number of features per restaurant
-# model = RankNet(input_size)
-# criterion = nn.BCELoss()  # Binary Cross-Entropy Loss
-# optimizer = optim.Adam(model.parameters(), lr=0.01)
-
-# Initialize the TimeAwarePreference object
-
-# time_aware_preference_trainer = TimeAwarePreference(decay_rate=0.9, memory_window=10)
-# time_aware_preference_trainer.load_history('user_preference_history.pt')
 
 # Helper function to predict and train
 def train_ranknet(model, optimizer, criterion, rounds=10):
@@ -459,8 +445,6 @@ def train_ranknet(model, optimizer, criterion, rounds=10):
     root.after(100, run_training_model)
     root.mainloop()
 
-# Run the training loop
-# train_ranknet(model, optimizer, criterion)
 
 ### ===== Initialize the RankNet model and training process===== ###
 
