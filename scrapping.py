@@ -22,7 +22,6 @@ def scrape_restaurant_data():
     # To be able to print in utf-8
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-    print("Hello World")
 
     # Set up Chrome options for proper encoding
     chrome_options = Options()
@@ -128,8 +127,6 @@ def scrape_restaurant_data():
     initial_height = 1000
     driver.execute_script(f"window.scrollTo(0, {initial_height});")
 
-    # print(f'last_height: {last_height}')
-
     while True:
         # increase the height by 1000 if the difference is greater than 1000
         if last_height - initial_height > 1000:
@@ -178,11 +175,9 @@ def scrape_restaurant_data():
         found_restaurant_flag = False
         update_index = 99999
         for index, row in db_df.iterrows():
-            # print(f'index: {index}')
-            # print(row)
+
             mask = (row['restaurant_name'] == restaurant['name']) & (row['restaurant_address'] == restaurant['address'])
-            # print()
-            # print(f'mask: {mask}')
+
             if mask == True:
                 found_restaurant_flag = True
                 update_count += 1
@@ -190,8 +185,6 @@ def scrape_restaurant_data():
                 
                 # To update the rating, open_status, last_time_scrappd, restaurant_types
 
-                # db_df.at[index, 'restaurant_name'] = restaurant['name']
-                # db_df.at[index, 'restaurant_address'] = restaurant['address']
                 db_df.at[index, 'restaurant_rating'] = float(restaurant['rating'])
                 db_df.at[index, 'is_open'] = 1 # 1 means open if we can scrape the website information
                 db_df.at[index, 'last_time_scraped'] = datetime.now()
@@ -257,8 +250,6 @@ def scrape_restaurant_data():
                     with open(image_filename, 'wb') as f:
                         f.write(response.content)
                     # Check if the image is saved
-                    # print(f"Image saved as: {image_filename}")
-                    # print("-" * 50)
 
                     if found_restaurant_flag == True:
                         db_df.at[update_index, 'restaurant_img'] = image_filename
@@ -272,7 +263,6 @@ def scrape_restaurant_data():
             # based on observation, the image url should be always present.
             # if it is not present, scraping is not working.
             print("No image URL found")
-            # print("-" * 50)
 
 
     # read unique_types.csv and make a unique list of types
