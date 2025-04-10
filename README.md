@@ -39,7 +39,7 @@ This helps the system prioritize recent preferences over older ones, ensuring re
 ## User Interface
 The app uses a CustomTkinter-based GUI to allow easy interaction, showing restaurant options with relevant details and images (when available). 
 
-Users make selections directly through the interface.
+Users make selections directly through the interface by clicking the option bottom A or B.
 
 ## Quick Start
 1. Clone the repository or download the files
