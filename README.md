@@ -56,4 +56,10 @@ Users make selections directly through the interface by clicking the option bott
     python model.py
     ```
 
+## Data Flow
+<pre> UberEats data ├──► scrappingg.py ├──► restaurant_database.csv ├──► model.py 
+                                                                     └──► ranknet_model.pth 
+                                                                     └──► user_preference_history.pt 
+</pre>
+
 
