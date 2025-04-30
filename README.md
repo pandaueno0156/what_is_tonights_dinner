@@ -1,4 +1,4 @@
-# what is tonight's dinner
+# What is tonight's dinner
 
 
 ## Project Purpose
