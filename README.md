@@ -59,10 +59,10 @@ Users make selections directly through the interface by clicking the option bott
 ## Data Structure and Summary of files
 <pre> 
 what_is_tonights_dinner/
-├── JP-model/
+├── JP-model/                             # Stores model weight data
       ├── ranknet_model.pth               # Recommendation model's weight
       └── user_preference_history.pt      # Model's user preference history weight
-├── model.py                              # Load and train AI model.
+├── model.py                              # Loads and trains AI model through user's choice of restaurants by UI
 ├── scrapping.py                          # Scraps UberEats restaurants info 
 ├── restaurant_database.csv               # Stores UberEats restaurants info
 └── README.md                             
