@@ -14,39 +14,51 @@ from datetime import datetime
 
 ### What is tonight's dinner Project ###
 
+# UberEats URL Configuration
+UBEREATS_URLS = {
+    'ikebukuro': "https://www.ubereats.com/jp/neighborhood/ikebukuro-toshima-tokyo?pl=JTdCJTIyYWRkcmVzcyUyMiUzQSUyMiVFMyU4MiVCNiVFMyU4MyVCQiVFMyU4MyVBOSVFMyU4MiVBNCVFMyU4MiVBQSVFMyU4MyVCMyVFMyU4MiVCQSVFNiVCMSVBMCVFOCVBMiU4QiUyMiUyQyUyMnJlZmVyZW5jZSUyMiUzQSUyMkNoSUoxZFFOSUdxVEdHQVJxZHRTcTdPenQ2RSUyMiUyQyUyMnJlZmVyZW5jZVR5cGUlMjIlM0ElMjJnb29nbGVfcGxhY2VzJTIyJTJDJTIybGF0aXR1ZGUlMjIlM0EzNS43MzU3ODQ4JTJDJTIybG9uZ2l0dWRlJTIyJTNBMTM5LjcwNjU5OTklN0Q%3D&slr=1&app_clip=false&campaign=signin_universal_link&effect=&guest_mode=false&marketing_vistor_id=9f92f82e-26c8-479c-98c7-b832176f401c&source_cta=undefined&source_flow=undefined",
+    'near_me': "https://www.ubereats.com/jp-en/near-me"
+}
 
-def scrape_restaurant_data():
+# Chrome options configuration
+CHROME_OPTIONS = {
+    'lang': 'ja_JP',
+    'headless': True,
+    'disable-gpu': True,
+    'no-sandbox': True,
+    'disable-dev-shm-usage': True,
+    'charset': 'UTF-8',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'window-size': '1920,1080'
+}
+
+
+def scrape_restaurant_data(location='ikebukuro'):
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
     # To be able to print in utf-8
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-
     # Set up Chrome options for proper encoding
     chrome_options = Options()
-    chrome_options.add_argument('--lang=ja_JP')
-    chrome_options.add_argument('--headless')  # Optional: run in headless mode
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--charset=UTF-8')
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
-    chrome_options.add_argument('--window-size=1920,1080')
+    for option, value in CHROME_OPTIONS.items():
+        chrome_options.add_argument(f'--{option}={value}' if value is not True else f'--{option}')
 
-    # ubereats url
-    # url = "https://www.ubereats.com/jp-en/neighborhood/ikebukuro-toshima-tokyo?srsltid=AfmBOoq53JdGTyBSsCf2qYmQATDOvWZ4iisqVwKVrBlPrS0uy2bp3ox2"
-    # url = "https://www.ubereats.com/jp-en/near-me"
-    url = "https://www.ubereats.com/jp/neighborhood/ikebukuro-toshima-tokyo?pl=JTdCJTIyYWRkcmVzcyUyMiUzQSUyMiVFMyU4MiVCNiVFMyU4MyVCQiVFMyU4MyVBOSVFMyU4MiVBNCVFMyU4MiVBQSVFMyU4MyVCMyVFMyU4MiVCQSVFNiVCMSVBMCVFOCVBMiU4QiUyMiUyQyUyMnJlZmVyZW5jZSUyMiUzQSUyMkNoSUoxZFFOSUdxVEdHQVJxZHRTcTdPenQ2RSUyMiUyQyUyMnJlZmVyZW5jZVR5cGUlMjIlM0ElMjJnb29nbGVfcGxhY2VzJTIyJTJDJTIybGF0aXR1ZGUlMjIlM0EzNS43MzU3ODQ4JTJDJTIybG9uZ2l0dWRlJTIyJTNBMTM5LjcwNjU5OTklN0Q%3D&slr=1&app_clip=false&campaign=signin_universal_link&effect=&guest_mode=false&marketing_vistor_id=9f92f82e-26c8-479c-98c7-b832176f401c&source_cta=undefined&source_flow=undefined"
+    # Get UberEats URL based on location
+    url = UBEREATS_URLS.get(location)
+    if not url:
+        logger.error(f"Invalid location: {location}")
+        sys.exit(1)
 
-    driver = webdriver.Chrome(options=chrome_options)  # Make sure you have ChromeDriver installed
+    driver = webdriver.Chrome(options=chrome_options)  # Make sure the ChromeDriver is installed
 
     # Wait for the content to load
     wait = WebDriverWait(driver, 10)
     driver.get(url)
 
 
-    script = """
+    script = r"""
     return Array.from(document.querySelectorAll('[data-test="store-link"]')).map(storeLink => {
         // Find the title
         const titleElement = storeLink.querySelector('[data-test="store-title"]');
@@ -61,42 +73,10 @@ def scrape_restaurant_data():
         // Get all spans with the specific class that contains types and address
         const targetSpans = Array.from(storeLink.querySelectorAll('span'));
         
-        // Address keywords to check (both Japanese and English)
-        const addressKeywords = [
-            // General Tokyo terms
-            '東京都', '东京都', 'Tokyo', 'Tōkyō-To', 'Tōkyō-to',
-            
-            // 23 Special Wards in Japanese
-            '千代田区', '中央区', '港区', '新宿区', '文京区', '台東区', '墨田区',
-            '江東区', '品川区', '目黒区', '大田区', '世田谷区', '渋谷区', '中野区',
-            '杉並区', '豊島区', '北区', '荒川区', '板橋区', '練馬区', '足立区',
-            '葛飾区', '江戸川区',
-            
-            // 23 Special Wards in English
-            'Chiyoda-ku', 'Chūō-ku', 'Minato-ku', 'Shinjuku-ku', 'Bunkyō-ku', 
-            'Taitō-ku', 'Sumida-ku', 'Kōtō-ku', 'Shinagawa-ku', 'Meguro-ku',
-            'Ōta-ku', 'Setagaya-ku', 'Shibuya-ku', 'Nakano-ku', 'Suginami-ku',
-            'Toshima-ku', 'Kita-ku', 'Arakawa-ku', 'Itabashi-ku', 'Nerima-ku',
-            'Adachi-ku', 'Katsushika-ku', 'Edogawa-ku',
-            
-            // Common alternative spellings without macrons
-            'Chuo-ku', 'Bunkyo-ku', 'Taito-ku', 'Koto-ku', 'Ota-ku',
-            
-            // Keep existing specific area names
-            '池袋', 'Ikebukuro', '高田馬場', '早稲田', '西早稲田', 
-            '渋谷', 'Shibuya', '代代木', '代代木上原', '代代木神園', '代代木国立',
-            '目白', '目白台', '目白駅', '目白駅前', '目白駅前通り',
-            '中野', '中野駅', '中野駅前', '中野駅前通り',
-            
-            // Postal code prefix
-            '171',
-            // Japan
-            '日本', 'Japan'
-        ];
-        
-        // Function to check if text contains any address keywords
+        // Function to check if text contains numeric digits
         const isAddress = (text) => {
-            return addressKeywords.some(keyword => text.includes(keyword));
+            // Check if the text contains any digits (0-9)
+            return /\d/.test(text);
         };
         
         // Separate types and address
@@ -116,7 +96,6 @@ def scrape_restaurant_data():
         }
     });
     """
-
 
     # Wait for store-link elements to be present
     wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[data-test="store-link"]')))
@@ -155,7 +134,6 @@ def scrape_restaurant_data():
         #interrupt the program
         sys.exit()
 
-
     # Create a directory to store images if it doesn't exist
     if not os.path.exists('restaurant_images'):
         os.makedirs('restaurant_images')
@@ -184,7 +162,6 @@ def scrape_restaurant_data():
                 update_index = index
                 
                 # To update the rating, open_status, last_time_scrappd, restaurant_types
-
                 db_df.at[index, 'restaurant_rating'] = float(restaurant['rating'])
                 db_df.at[index, 'is_open'] = 1 # 1 means open if we can scrape the website information
                 db_df.at[index, 'last_time_scraped'] = datetime.now()
@@ -250,7 +227,6 @@ def scrape_restaurant_data():
                     with open(image_filename, 'wb') as f:
                         f.write(response.content)
                     # Check if the image is saved
-
                     if found_restaurant_flag == True:
                         db_df.at[update_index, 'restaurant_img'] = image_filename
                     else:
@@ -260,8 +236,8 @@ def scrape_restaurant_data():
             except Exception as e:
                 print(f"Error downloading image: {e}")
         else:
-            # based on observation, the image url should be always present.
-            # if it is not present, scraping is not working.
+            # Based on observation, the image url should be always present.
+            # if it is not present, scraping is not workin properly.
             print("No image URL found")
 
 
@@ -289,6 +265,8 @@ def scrape_restaurant_data():
     logger.info(f"Scraping completed")
 
 if __name__ == "__main__":
-    scrape_restaurant_data()
+    
+    # Change the location parameter to scrape different areas
+    scrape_restaurant_data(location='ikebukuro')
 
 

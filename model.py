@@ -13,7 +13,6 @@ import os
 import customtkinter as ctk
 import json
 
-
 ### ===== Prepare the restaurant data from the database ===== ###
 def scrape_and_prepare_restaurant_data():
 
@@ -112,7 +111,6 @@ class RestaurantComparisonGUI:
     def create_restaurant_display(self):
         # Restaurant A UI
         # Title
-        
         # Image placeholder
         self.rest_a_image_placeholder_label = ctk.CTkLabel(self.rest_a_frame, text="") # empty text to hold the image
         self.rest_a_image_placeholder_label.grid(row=2, column=0, pady=10)
@@ -296,18 +294,30 @@ class TimeAwarePreference:
 
 ### ===== Define the RankNet model ===== ###
 
+# class RankNet(nn.Module):
+#     def __init__(self, input_size):
+#         super(RankNet, self).__init__()
+#         self.fc = nn.Sequential(
+#             nn.Linear(input_size, 16),  # Hidden layer (Original paper 50 input, 10 hidden - 1 output, 2 layers)
+#             nn.ReLU(),
+#             nn.Linear(16, 1)  # Single score output
+#         )
+    
+#     def forward(self, x):
+#         return self.fc(x)
+
 class RankNet(nn.Module):
     def __init__(self, input_size):
         super(RankNet, self).__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(input_size, 16),  # Hidden layer (Original paper 50 input, 10 hidden - 1 output, 2 layers)
-            nn.ReLU(),
-            nn.Linear(16, 1)  # Single score output
-        )
-    
-    def forward(self, x):
-        return self.fc(x)
+        self.fc1 = nn.Linear(input_size, 16)  # Hidden layer (Original paper 50 input, 10 hidden - 1 output, 2 layers)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(16, 1)  # Single score output
 
+    def forward(self, x):
+        output = self.fc1(x)
+        output = self.relu(output)
+        output = self.fc2(output)
+        return output
 ### ===== Define the RankNet model ===== ###
 
 
@@ -419,8 +429,8 @@ def train_ranknet(model, optimizer, criterion, rounds=10):
             # Train the model with the current comparison and historical comparisons
             optimizer.zero_grad()
             loss = time_aware_preference_trainer.train_with_history(
-                model, 
-                optimizer, 
+                model,
+                optimizer,
                 current_comparison
                 )
 
@@ -435,7 +445,7 @@ def train_ranknet(model, optimizer, criterion, rounds=10):
                 root.destroy()
         
         # Save the history when the user quits the program
-        time_aware_preference_trainer.save_history('user_preference_history.pt')
+        time_aware_preference_trainer.save_history('./JP-model/user_preference_history.pt')
             
         # Final restaurant recommendation
         print(f"\nFinal Recommendation: {current_winner}")
@@ -467,9 +477,13 @@ if __name__ == "__main__":
     criterion = nn.BCELoss()  # Binary Cross-Entropy Loss
     optimizer = optim.Adam(model.parameters(), lr=0.01)
 
+    # Create the JP-model folder if it doesn't exist
+    if not os.path.exists('./JP-model'):
+        os.makedirs('./JP-model')
+
     # Load the model and optimizer from the checkpoint
     try:
-        checkpoint = torch.load('ranknet_model.pth')
+        checkpoint = torch.load('./JP-model/ranknet_model.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         print('Ranknet model loaded successfully')
@@ -483,7 +497,7 @@ if __name__ == "__main__":
     
     # Load the user preference history from the checkpoint
     try:
-        user_preference_history = torch.load('user_preference_history.pt')
+        user_preference_history = torch.load('./JP-model/user_preference_history.pt')
         time_aware_preference_trainer.load_history(user_preference_history)
         print('User preference history loaded successfully')
     except:
@@ -498,6 +512,6 @@ if __name__ == "__main__":
     # Save the model and history after training
     torch.save({'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict()},
-                'ranknet_model.pth')
+                './JP-model/ranknet_model.pth')
 
     update_restaurant_database(df)
