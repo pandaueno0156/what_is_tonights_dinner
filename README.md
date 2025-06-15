@@ -57,9 +57,16 @@ Users make selections directly through the interface by clicking the option bott
     ```
 
 ## Data Flow
-<pre> UberEats data ├──► scrappingg.py ├──► restaurant_database.csv ├──► model.py 
-                                                                     └──► ranknet_model.pth 
-                                                                     └──► user_preference_history.pt 
+<pre> 
+what_is_tonights_dinner/
+├── JP-model/
+      ├── ranknet_model.pth               # Recommendation model's weight
+      └── user_preference_history.pt      # Model's user preference history weight
+├── model.py                              # Load and train AI model
+├── scrapping.py                          # Scraps UberEats restaurants info 
+├── restaurant_database.csv               # Stores UberEats restaurants info
+└── README.md                             
+
 </pre>
 
 
