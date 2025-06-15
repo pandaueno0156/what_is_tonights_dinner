@@ -56,13 +56,13 @@ Users make selections directly through the interface by clicking the option bott
     python model.py
     ```
 
-## Data Flow
+## Data Structure and Summary of files
 <pre> 
 what_is_tonights_dinner/
 ├── JP-model/
       ├── ranknet_model.pth               # Recommendation model's weight
       └── user_preference_history.pt      # Model's user preference history weight
-├── model.py                              # Load and train AI model
+├── model.py                              # Load and train AI model.
 ├── scrapping.py                          # Scraps UberEats restaurants info 
 ├── restaurant_database.csv               # Stores UberEats restaurants info
 └── README.md                             
