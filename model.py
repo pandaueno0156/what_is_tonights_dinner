@@ -60,8 +60,6 @@ def scrape_and_prepare_restaurant_data():
 
     return restaurants, restaurants_name_feature_dict, df
 
-# print(restaurants_name_feature_dict)
-
 ### ===== Prepare the restaurant data from the database ===== ###
 
 
@@ -287,24 +285,12 @@ class TimeAwarePreference:
     def load_history(self, user_preference_history):
         # Load the history when the user starts the program
         self.history = user_preference_history
-        # print(f'old_loaded_history: {self.history}')
 
 ### ===== TimeAwarePreference class to add the TAP function to the RankNet model ===== ###
 
 
 ### ===== Define the RankNet model ===== ###
 
-# class RankNet(nn.Module):
-#     def __init__(self, input_size):
-#         super(RankNet, self).__init__()
-#         self.fc = nn.Sequential(
-#             nn.Linear(input_size, 16),  # Hidden layer (Original paper 50 input, 10 hidden - 1 output, 2 layers)
-#             nn.ReLU(),
-#             nn.Linear(16, 1)  # Single score output
-#         )
-    
-#     def forward(self, x):
-#         return self.fc(x)
 
 class RankNet(nn.Module):
     def __init__(self, input_size):
