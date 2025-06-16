@@ -47,7 +47,7 @@ Users make selections directly through the interface by clicking the option bott
 2. Install dependencies:
   In terminal
     ```bash
-    pip install torch pandas customtkinter selenium pillow
+    pip install -r requirements.txt
     ```
 
 3. Run the main script:
